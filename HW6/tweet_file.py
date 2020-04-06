@@ -25,7 +25,7 @@ class StdOutListener(StreamListener):
                 coordinates = place['bounding_box']['coordinates']
                 longt = coordinates[0][0][0]
                 lat = coordinates[0][0][1]
-                tweet = {'Latitude':lat,'Longitude':longt,'hashtags':tweet_data['entities']['hashtags'],'username':tweet_data['user']['screen_name']}                coordinates=place['bounding_box']['coordinates']
+                tweet = {'Latitude':lat,'Longitude':longt,'hashtags':tweet_data['entities']['hashtags'],'username':tweet_data['user']['screen_name']}                               
                 #print(coordinates)
                 collection.save(tweet)
 
