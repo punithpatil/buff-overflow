@@ -1,5 +1,4 @@
 import cred
-from pymongo import Connection
 import json
 import requests
 from tweepy.streaming import StreamListener
