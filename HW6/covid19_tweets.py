@@ -9,6 +9,9 @@ import datetime
 keywords = ['covid19','ncov','corona','coronavirus','covid2019']
 language = ['en']
 
+def print_coordinates(coordinates):
+    print(coordinates)
+
 class StdOutListener(StreamListener):
     def on_data(self, data):
         tweet_data = json.loads(data)
@@ -16,10 +19,9 @@ class StdOutListener(StreamListener):
             place=tweet_data['place']
             if place!=None:
                 coordinates=place['bounding_box']['coordinates']
-                print(coordinates)
-
+                print_coordinates(coordinates)
         except KeyError:
-            print('\n')
+            print_coordinates("\n")
 
         return True
 
