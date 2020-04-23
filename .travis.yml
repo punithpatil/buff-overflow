@@ -1,7 +1,13 @@
 language: python
 
+services:
+  - mongodb
+
 install:
   - pip install -r requirements.txt
+
+before_script:
+  - sleep 15
 
 script:
   - python -m unittest
