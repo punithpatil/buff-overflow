@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset='utf-8' />
+  <title>Create interactive hover effects with Mapbox GL JS</title>
+  <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+  <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v1.8.1/mapbox-gl.js'></script>
+  <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v1.8.1/mapbox-gl.css' rel='stylesheet' />
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    #map {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 100%;
+    }
+
+    .quakeInfo {
+      position: absolute;
+      font-family: sans-serif;
+      margin-top: 5px;
+      margin-left: 5px;
+      padding: 5px;
+      width: 30%;
+      border: 2px solid White;
+      font-size: 14px;
+      color: #222;
+      background-color: #fff;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id='map'></div>
+  <div class='quakeInfo'>
+    <div><strong>Magnitude:</strong> <span id='mag'></span></div>
+    <div><strong>Location:</strong> <span id='loc'></span></div>
+    <div><strong>Date:</strong> <span id='date'></span></div>
+  </div>
+
+  <script>
+    mapboxgl.accessToken = 'pk.eyJ1IjoiY2hhbmRhbm5haWsiLCJhIjoiY2s4bHFwdzhvMGZndjNmbzI0aGNweWRzdCJ9.oCYqqaiPDmEV_x8hc3RTHQ';
+    var map = new mapboxgl.Map({
+      container: 'map', // Specify the container ID
+      style: 'mapbox://styles/chandannaik/ck8lnu9ns073d1ioaop7bzd70', // Specify which map style to use
+      center: [-122.44121, 37.76132], // Specify the starting position [lng, lat]
+      zoom: 3.5 // Specify the starting zoom
+    });
+    var magDisplay = document.getElementById('mag');
+    var locDisplay = document.getElementById('loc');
+    var dateDisplay = document.getElementById('date');
+
+    // JavaScript date constructor:
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date
+    var today = new Date();
+    // Use JavaScript to get the date a week ago
+    var priorDate = new Date().setDate(today.getDate() - 7);
+    // Set that to an ISO8601 timestamp as required by the USGS earthquake API
+    var priorDateTs = new Date(priorDate);
+    var sevenDaysAgo = priorDateTs.toISOString();
+
+
+
+
+    // Start Test JSON data
+
+
+    var testData = [{
+        "_id": "5e8bdee12223973dee9c56c6",
+        "Latitude": 35.994568,
+        "Longitude": -87.022482,
+        "hashtags": [{
+          "text": "corona",
+          "indices": [44, 51]
+        }, {
+          "text": "quarantine",
+          "indices": [52, 63]
+        }, {
+          "text": "covid19",
+          "indices": [64, 72]
+        }, {
+          "text": "covid",
+          "indices": [73, 79]
+        }, {
+          "text": "rona",
+          "indices": [80, 85]
+        }],
+        "username": "haydencoffmusic"
+      },
+      {
+        "_id": "5e8bdee52223973dee9c56c7",
+        "Latitude": 43.050553,
+        "Longitude": -80.248423,
+        "hashtags": [],
+        "username": "SusanMcKechnie5"
+      }, {
+        "_id": "5e8bdee62223973dee9c56c8",
+        "Latitude": 38.293241,
+        "Longitude": -81.707175,
+        "hashtags": [],
+        "username": "punkrockchic182"
+      }, {
+        "_id": "5e8bdee82223973dee9c56c9",
+        "Latitude": 39.787856,
+        "Longitude": -84.206581,
+        "hashtags": [],
+        "username": "_OH_Wells"
+      }, {
+        "_id": "5e8bdee82223973dee9c56ca",
+        "Latitude": 44.889964,
+        "Longitude": -93.329515,
+        "hashtags": [{
+          "text": "methotrexate",
+          "indices": [96, 109]
+        }],
+        "username": "kelliecarlson33"
+      },
+      {
+        "_id": "5e8bdee92223973dee9c56cb",
+        "Latitude": 25.837092,
+        "Longitude": -106.645646,
+        "hashtags": [],
+        "username": "cphsvb2018"
+      }, {
+        "_id": "5e8bdee92223973dee9c56cc",
+        "Latitude": 44.889964,
+        "Longitude": -93.329515,
+        "hashtags": [{
+          "text": "Coronavirus",
+          "indices": [4, 16]
+        }, {
+          "text": "COVID19",
+          "indices": [50, 58]
+        }, {
+          "text": "Covid_19",
+          "indices": [59, 68]
+        }],
+        "username": "DaviDNAlexander"
+      }
+    ]
+
+    // Start Convert JSON to geoJSON
+    var test = [];
+    for (var geo in testData) {
+      // console.log(testData[geo].Latitude);
+      // console.log(testData[geo].Longitude);
+
+      test.push(JSON.parse('{"type": "Feature","geometry": {"type": "Point", "coordinates": [' + testData[geo].Longitude + ',' + testData[geo].Latitude + ']}}'));
+    }
+    console.log(test)
+    // End Convert JSON to geoJSON
+
+    // End Test JSON data
+
+    // Start Dummy API call
+
+    // function foo() {
+    //   var httpRequest = new XMLHttpRequest();
+    //   httpRequest.open('GET', "https://api.getthedata.com/bng2latlong/529090/179645", false);
+    //   httpRequest.send();
+    //   return httpRequest.responseText;
+    // }
+    //
+    // var tweetData = foo();
+    // var parsedTweetData = JSON.parse(tweetData);
+    //
+    // function updateMap(data) {
+    //   var testAPIData = []
+    //   for (var idx in data) {
+    //     console.log(data[idx].latitude);
+    //     testAPIData.push(JSON.parse('{"type": "Feature","properties": {"status": ' + data.status + ',"northing": ' + data.northing + ',"easting" : ' + data.easting + '},"geometry":{"type": "Point","coordinates": [' + data.longitude + ',' + data
+    //       .latitude + ']},"id": ' + idx + '}'));
+    //   }
+    //   return testAPIData
+    // }
+    //
+    // var geoJSONTweet = updateMap(parsedTweetData);
+
+    //End Dummy API call
+
+    //Start Mapbox API object call
+
+    map.on('load', function() {
+      map.loadImage(
+        'https://upload.wikimedia.org/wikipedia/commons/b/bb/Tweet-icon.png',
+        function(error, image) {
+          if (error) throw error;
+          map.addImage('cat', image);
+          map.addSource('point', {
+            'type': 'geojson',
+            'data': {
+              'type': 'FeatureCollection',
+              'features': test
+            }
+          });
+          map.addLayer({
+            'id': 'points',
+            'type': 'symbol',
+            'source': 'point',
+            'layout': {
+              'icon-image': 'cat',
+              'icon-size': 0.07
+            }
+          });
+        }
+      );
+    });
+    var quakeID = null;
+    /*
+    map.on('mousemove', 'earthquakes-viz', (e) => {
+
+      map.getCanvas().style.cursor = 'pointer';
+      // Set variables equal to the current feature's magnitude, location, and time
+      var quakeMagnitude = e.features[0].properties.mag;
+      var quakeLocation = e.features[0].properties.place;
+      // var quakeDate = new Date(e.features[0].properties.time);
+
+      // Check whether features exist
+      if (e.features.length > 0) {
+        // Display the magnitude, location, and time in the sidebar
+        magDisplay.textContent = quakeMagnitude;
+        locDisplay.textContent = quakeLocation;
+        dateDisplay.textContent = quakeDate;
+
+        // If quakeID for the hovered feature is not null,
+        // use removeFeatureState to reset to the default behavior
+        if (quakeID) {
+          map.removeFeatureState({
+            source: "earthquakes",
+            id: quakeID
+          });
+        }
+
+        quakeID = e.features[0].id;
+
+        // When the mouse moves over the earthquakes-viz layer, set the
+        // feature state for the feature under the mouse
+        map.setFeatureState({
+          source: 'earthquakes',
+          id: quakeID,
+        }, {
+          hover: true
+        });
+
+      }
+    });
+
+    map.on("mouseleave", "earthquakes-viz", function() {
+
+      if (quakeID) {
+        map.setFeatureState({
+          source: 'earthquakes',
+          id: quakeID
+        }, {
+          hover: false
+        });
+      }
+      quakeID = null;
+      // Remove the information from the previously hovered feature from the sidebar
+      magDisplay.textContent = '';
+      locDisplay.textContent = '';
+      dateDisplay.textContent = '';
+      // Reset the cursor style
+      map.getCanvas().style.cursor = '';
+    });
+    */
+  </script>
+
+</body>
+
+</html>
