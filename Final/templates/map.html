@@ -1,0 +1,363 @@
+<!-- Team 2- BuffOverflow - We have referred templates and CSS from https://www.creative-tim.com/ -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <link rel="apple-touch-icon" sizes="76x76" href="../static/img/apple-icon.png">
+  <link rel="icon" type="image/png" href="../static/img/favicon.png">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <title>
+    Twitter Data Analysis - COVID-19
+  </title>
+  <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, shrink-to-fit=no' name='viewport' />
+  <link href="https://fonts.googleapis.com/css?family=Poppins:200,300,400,600,700,800" rel="stylesheet" />
+  <link href="https://use.fontawesome.com/releases/v5.0.6/css/all.css" rel="stylesheet">
+  <link href="../static/css/nucleo-icons.css" rel="stylesheet" />
+  <link href="../static/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="../static/css/black-dashboard.css?v=1.0.0" rel="stylesheet" />
+  <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v1.8.1/mapbox-gl.js'></script>
+  <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v1.8.1/mapbox-gl.css' rel='stylesheet' />
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    #map {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 100%;
+    }
+
+    .quakeInfo {
+      position: absolute;
+      font-family: sans-serif;
+      margin-top: 5px;
+      margin-left: 5px;
+      padding: 5px;
+      width: 30%;
+      border: 2px solid White;
+      font-size: 14px;
+      color: #222;
+      background-color: #fff;
+      border-radius: 3px;
+    }
+
+    .mapboxgl-popup-content{
+      width: max-content;
+    }
+  </style>
+</head>
+
+<body class=" ">
+  <div class="wrapper ">
+    <div class="sidebar">
+      <div class="sidebar-wrapper">
+      <ul class="nav">
+          <li>
+                  <a href="{{url_for('hello')}}">
+              <i class="tim-icons icon-chart-pie-36"></i>
+              <p style="font-size:20px">DASHBOARD</p>
+            </a>
+          </li>
+            <br/>
+            <br/>
+            <br/>
+          <li class="active">
+		  <a href="{{url_for('map')}}">
+              <i class="tim-icons icon-pin"></i>
+              <p style="font-size:20px">MAP TRENDS</p>
+            </a>
+          </li>
+            <br/>
+            <br/>
+            <br/>
+          <li>
+            <a href="{{url_for('user')}}">
+              <i class="tim-icons icon-single-02"></i>
+              <p style="font-size:20px">TEAM</p>
+            </a>
+          </li>
+            <br/>
+              <br/>
+            <br/>
+        </ul>
+      </div>
+    </div>
+    <div class="main-panel">
+      <nav class="navbar navbar-expand-lg navbar-absolute navbar-transparent   ">
+        <div class="container-fluid">
+          <div class="navbar-wrapper">
+            <div class="navbar-toggle d-inline">
+              <button type="button" class="navbar-toggler">
+                <span class="navbar-toggler-bar bar1"></span>
+                <span class="navbar-toggler-bar bar2"></span>
+                <span class="navbar-toggler-bar bar3"></span>
+              </button>
+            </div>
+              <a class="navbar-brand" href="#pablo"><h2>Tweets Map</h2></a>
+          </div>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navigation" aria-controls="navigation-index" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-bar navbar-kebab"></span>
+            <span class="navbar-toggler-bar navbar-kebab"></span>
+            <span class="navbar-toggler-bar navbar-kebab"></span>
+          </button>
+        </div>
+      </nav>
+      <div class="modal fade" id="searchModal" tabindex="-1" role="dialog" aria-labelledby="searchModal" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <input type="text" class="form-control" id="inlineFormInputGroup" placeholder="SEARCH">
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <i class="tim-icons icon-simple-remove"></i>
+              </button>
+            </div>
+            <div class="modal-footer">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="content">
+        <div id="map"></div>
+      </div>
+      <footer class="footer">
+        <div class="container-fluid">
+          <div class="copyright float-right">
+            ©
+            <script>
+              document.write(new Date().getFullYear())
+            </script> <a href="https://www.creative-tim.com" target="_blank">Creative Tim</a>
+          </div>
+      </footer>
+      </div>
+    </div>
+    <div class="fixed-plugin">
+      <div class="dropdown show-dropdown">
+        <a href="#" data-toggle="dropdown">
+          <i class="fa fa-cog fa-2x"> </i>
+        </a>
+        <ul class="dropdown-menu">
+          <li class="header-title"> Sidebar Background</li>
+           <li class="adjustments-line">
+            <a href="javascript:void(0)" class="switch-trigger background-color">
+              <div class="badge-colors text-center">
+                <span class="badge filter badge-primary active" data-color="primary"></span>
+                <span class="badge filter badge-blue" data-color="blue"></span>
+                <span class="badge filter badge-green" data-color="green"></span>
+              </div>
+              <div class="clearfix"></div>
+            </a>
+          </li>
+          <li class="adjustments-line text-center color-change">
+            <span class="color-label">LIGHT MODE</span>
+            <span class="badge light-badge mr-2"></span>
+            <span class="badge dark-badge ml-2"></span>
+            <span class="color-label">DARK MODE</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <script src="../static/js/core/jquery.min.js"></script>
+    <script src="../static/js/core/popper.min.js"></script>
+    <script src="../static/js/core/bootstrap.min.js"></script>
+    <script src="../static/js/plugins/perfect-scrollbar.jquery.min.js"></script>
+    <script src="../static/js/plugins/chartjs.min.js"></script>
+    <script src="../static/js/black-dashboard.min.js?v=1.0.0" type="text/javascript"></script>
+    <script src="../static/demo/demo.js"></script>
+    <script>
+      $(document).ready(function() {
+        $().ready(function() {
+          $sidebar = $('.sidebar');
+          $navbar = $('.navbar');
+
+          $full_page = $('.full-page');
+
+          $sidebar_responsive = $('body > .navbar-collapse');
+          sidebar_mini_active = true;
+          white_color = false;
+
+          window_width = $(window).width();
+
+          fixed_plugin_open = $('.sidebar .sidebar-wrapper .nav li.active a p').html();
+          $('.fixed-plugin a').click(function(event) {
+            if ($(this).hasClass('switch-trigger')) {
+              if (event.stopPropagation) {
+                event.stopPropagation();
+              } else if (window.event) {
+                window.event.cancelBubble = true;
+              }
+            }
+          });
+
+          $('.fixed-plugin .background-color span').click(function() {
+            $(this).siblings().removeClass('active');
+            $(this).addClass('active');
+
+            var new_color = $(this).data('color');
+
+            if ($sidebar.length != 0) {
+              $sidebar.attr('data-color', new_color);
+            }
+
+            if ($navbar.length != 0) {
+              $navbar.attr('data-color', new_color);
+            }
+
+            if ($full_page.length != 0) {
+              $full_page.attr('filter-color', new_color);
+            }
+
+            if ($sidebar_responsive.length != 0) {
+              $sidebar_responsive.attr('data-color', new_color);
+            }
+          });
+
+          $('.switch-sidebar-mini input').on("switchChange.bootstrapSwitch", function() {
+            var $btn = $(this);
+
+            if (sidebar_mini_active == true) {
+              $('body').removeClass('sidebar-mini');
+              sidebar_mini_active = false;
+              blackDashboard.showSidebarMessage('Sidebar mini deactivated...');
+            } else {
+              $('body').addClass('sidebar-mini');
+              sidebar_mini_active = true;
+              blackDashboard.showSidebarMessage('Sidebar mini activated...');
+            }
+
+            var simulateWindowResize = setInterval(function() {
+              window.dispatchEvent(new Event('resize'));
+            }, 180);
+
+            setTimeout(function() {
+                          clearInterval(simulateWindowResize);
+            }, 1000);
+          });
+
+          $('.switch-change-color input').on("switchChange.bootstrapSwitch", function() {
+            var $btn = $(this);
+
+            if (white_color == true) {
+
+              $('body').addClass('change-background');
+              setTimeout(function() {
+                $('body').removeClass('change-background');
+                $('body').removeClass('white-content');
+              }, 900);
+              white_color = false;
+            } else {
+
+              $('body').addClass('change-background');
+              setTimeout(function() {
+                $('body').removeClass('change-background');
+                $('body').addClass('white-content');
+              }, 900);
+
+              white_color = true;
+            }
+
+
+          });
+
+          $('.light-badge').click(function() {
+            $('body').addClass('white-content');
+          });
+
+          $('.dark-badge').click(function() {
+            $('body').removeClass('white-content');
+          });
+        });
+      });
+     mapboxgl.accessToken = 'pk.eyJ1IjoiY2hhbmRhbm5haWsiLCJhIjoiY2s4bHFwdzhvMGZndjNmbzI0aGNweWRzdCJ9.oCYqqaiPDmEV_x8hc3RTHQ';
+     var map = new mapboxgl.Map({
+      container: 'map', // Specify the container ID
+      style: 'mapbox://styles/chandannaik/ck8lnu9ns073d1ioaop7bzd70', // Specify which map style to use
+      center: [-122.44121, 37.76132], // Specify the starting position [lng, lat]
+      zoom: 3.5 // Specify the starting zoom
+    });
+
+    // Start Test JSON data
+    var testTweetData = {{data | safe}};
+     var tweet_properties = [];
+    for (var idx in testTweetData) {
+      console.log("Lat: ", testTweetData[idx].Latitude);
+      console.log("Long: ", testTweetData[idx].Longitude);
+      let lat_long_obj = [];
+      lat_long_obj.push(testTweetData[idx].Longitude);
+      lat_long_obj.push(testTweetData[idx].Latitude);
+
+      tweet_properties.push({
+        "type": "Feature",
+        "properties": {
+          "Tweet_Text": testTweetData[idx].Tweet_text,
+          "Likes" : testTweetData[idx].Likes
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": lat_long_obj
+        }
+      });
+    }
+    console.log("Tweet Properties: ", tweet_properties);
+    // End Convert JSON to geoJSON
+
+    //Start Mapbox API object call
+
+    map.on('load', function() {
+      map.loadImage(
+        'https://upload.wikimedia.org/wikipedia/commons/b/bb/Tweet-icon.png',
+        function(error, image) {
+          if (error) throw error;
+          map.addImage('tweet', image);
+          map.addSource('point', {
+            'type': 'geojson',
+            'data': {
+              'type': 'FeatureCollection',
+              'features': tweet_properties
+            }
+          });
+          map.addLayer({
+            'id': 'tweet_points',
+            'type': 'symbol',
+            'source': 'point',
+            'layout': {
+              'icon-image': 'tweet',
+              'icon-size': 0.05
+            }
+          });
+        }
+      );
+      });
+
+    var popup = new mapboxgl.Popup({
+      closeButton: false,
+      closeOnClick: false
+    });
+
+    map.on("mouseenter", 'tweet_points', function(e) {
+      map.getCanvas().style.cursor = 'pointer';
+
+      var coordinates = e.features[0].geometry.coordinates.slice();
+      var tweet_description = e.features[0].properties.Tweet_Text;
+      var tweet_likes = e.features[0].properties.Likes;
+      while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+        coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+      }
+      popup
+        .setLngLat(coordinates)
+        .setHTML(tweet_description)
+        .addTo(map);
+
+    });
+
+    map.on('mouseleave', 'tweet_points', function() {
+      map.getCanvas().style.cursor = '';
+      popup.remove();
+    });
+
+    </script>
+</body>
+</html>
+                    

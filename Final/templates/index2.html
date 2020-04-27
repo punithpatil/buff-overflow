@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset='utf-8' />
+  <title>Tweets Map</title>
+  <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+  <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v1.8.1/mapbox-gl.js'></script>
+  <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v1.8.1/mapbox-gl.css' rel='stylesheet' />
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    #map {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 100%;
+    }
+
+    .quakeInfo {
+      position: absolute;
+      font-family: sans-serif;
+      margin-top: 5px;
+      margin-left: 5px;
+      padding: 5px;
+      width: 30%;
+      border: 2px solid White;
+      font-size: 14px;
+      color: #222;
+      background-color: #fff;
+      border-radius: 3px;
+    }
+
+    .mapboxgl-popup-content{
+      width: max-content;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id='map'></div>
+
+  <script>
+    mapboxgl.accessToken = 'pk.eyJ1IjoiY2hhbmRhbm5haWsiLCJhIjoiY2s4bHFwdzhvMGZndjNmbzI0aGNweWRzdCJ9.oCYqqaiPDmEV_x8hc3RTHQ';
+    var map = new mapboxgl.Map({
+      container: 'map', // Specify the container ID
+      style: 'mapbox://styles/chandannaik/ck8lnu9ns073d1ioaop7bzd70', // Specify which map style to use
+      center: [-122.44121, 37.76132], // Specify the starting position [lng, lat]
+      zoom: 3.5 // Specify the starting zoom
+    });
+
+    // Start Test JSON data
+    var testTweetData = {{data | safe}};
+
+//     var testTweetData = [{
+//         "_id ": "5 ea3957cbe9788708960695a ",
+//         "Latitude": 43.373074,
+//         "Longitude": -79.810142,
+//         "hashtags": [{
+//           "text": " MindsetMentor ",
+//           "indices": [
+//             14,
+//             28
+//           ]
+//         }],
+//         "username": " sauga960am ",
+//         "Created_date": {
+//           "$date": 1587778934000
+//         },
+//         "Location": " Mississauga, Ontario ",
+//         "Tweet_text": " Thisweek, on# MindsetMentorpsychologistSarajoins @IAmTaniaKolartohelpStevecopewithwhathecallsawildly\u2026https: //t.co/ipHRchgTnD",
+//         "Likes": 4693,
+//         "Timezone": null
+//       },
+//       {
+//         "_id": "5ea3957cbe9788708960695c",
+//         "Latitude": -1.389053,
+//         "Longitude": 36.664573,
+//         "hashtags": [
+
+//         ],
+//         "username": "vincentochola",
+//         "Created_date": {
+//           "$date": 1587778935000
+//         },
+//         "Location": "NairobiCounty",
+//         "Tweet_text": "Finally!!!!!!!@cnngaruiya@nderi_j@KetanVora4",
+//         "Likes": 2044,
+//         "Timezone": null
+//       }
+//     ];
+
+    // End Test JSON data
+
+    // Start Convert JSON to geoJSON
+    var tweet_properties = [];
+    for (var idx in testTweetData) {
+      console.log("Lat: ", testTweetData[idx].Latitude);
+      console.log("Long: ", testTweetData[idx].Longitude);
+      let lat_long_obj = [];
+      lat_long_obj.push(testTweetData[idx].Longitude);
+      lat_long_obj.push(testTweetData[idx].Latitude);
+
+      tweet_properties.push({
+        "type": "Feature",
+        "properties": {
+          "Tweet_Text": testTweetData[idx].Tweet_text,
+          "Likes" : testTweetData[idx].Likes
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": lat_long_obj
+        }
+      });
+    }
+    console.log("Tweet Properties: ", tweet_properties);
+    // End Convert JSON to geoJSON
+
+    //Start Mapbox API object call
+
+    map.on('load', function() {
+      map.loadImage(
+        'https://upload.wikimedia.org/wikipedia/commons/b/bb/Tweet-icon.png',
+        function(error, image) {
+          if (error) throw error;
+          map.addImage('tweet', image);
+          map.addSource('point', {
+            'type': 'geojson',
+            'data': {
+              'type': 'FeatureCollection',
+              'features': tweet_properties
+            }
+          });
+          map.addLayer({
+            'id': 'tweet_points',
+            'type': 'symbol',
+            'source': 'point',
+            'layout': {
+              'icon-image': 'tweet',
+              'icon-size': 0.05
+            }
+          });
+        }
+      );
+    });
+
+    var popup = new mapboxgl.Popup({
+      closeButton: false,
+      closeOnClick: false
+    });
+
+    map.on("mouseenter", 'tweet_points', function(e) {
+      map.getCanvas().style.cursor = 'pointer';
+
+      var coordinates = e.features[0].geometry.coordinates.slice();
+      var tweet_description = e.features[0].properties.Tweet_Text;
+      var tweet_likes = e.features[0].properties.Likes;
+
+      // Ensure that if the map is zoomed out such that multiple
+      // copies of the feature are visible, the popup appears
+      // over the copy being pointed to.
+      while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+        coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+      }
+
+      // Populate the popup and set its coordinates
+      // based on the feature found.
+      popup
+        .setLngLat(coordinates)
+        .setHTML(tweet_description)
+        .addTo(map);
+
+    });
+
+    map.on('mouseleave', 'tweet_points', function() {
+      map.getCanvas().style.cursor = '';
+      popup.remove();
+    });
+
+  </script>
+
+</body>
+
+</html>
+
