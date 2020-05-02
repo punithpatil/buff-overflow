@@ -7,7 +7,3 @@
 4. Priyanka Umesh Pandit Tailapur
 5. Punith Patil
 6. Sravanth Yajamanam
-
-### Production Link 
-http://3.81.125.119:5000/
-
