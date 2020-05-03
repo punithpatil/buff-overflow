@@ -54,10 +54,11 @@ class TestStdOutListener(unittest.TestCase):
         print("Removed _id: ", response.pop('_id'))
         self.assertDictEqual(response, {'Latitude': 38.65476, 'Longitude': -121.033013, 'hashtags': [], 'username': 'MarieHarlow2'})
 
-class TestIntegrationTestMongoDB(unittest.TestCase):
+class TestIntegrationMongoDB(unittest.TestCase):
     def test_actual_mongo_service(self):
-        connection = pymongo.MongoClient('localhost', 27017)
-        db = connection.TwitterStream
-        db.tweets.ensure_index("id", unique=True, dropDups=True)
-        collection = db.tweets
-        return collection
+        actuall_collection = tweet_file.create_mongo_connection()
+        tweet_file.StdOutListener(actuall_collection).on_data(templates.model_tweet_response.tweet_dump)
+        response = actuall_collection.find_one()
+        print("Removed _id: ", response.pop('_id'))
+        self.assertDictEqual(response, {'Latitude': 38.65476, 'Longitude': -121.033013, 'hashtags': [],
+                                        'username': 'MarieHarlow2'})
