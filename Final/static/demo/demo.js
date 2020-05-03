@@ -1,3 +1,4 @@
+/* We have referred to template from creative tim (https://www.creative-tim.com/product/black-dashboard) */
 type = ['primary', 'info', 'success', 'warning', 'danger'];
 
 demo = {
