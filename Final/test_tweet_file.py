@@ -17,12 +17,13 @@ from sklearn.feature_extraction.text import CountVectorizer
 from collections import Counter
 from wordcloud import WordCloud
 
+#MongoDB Connection
 connection = MongoClient('localhost', 27017)
 keywords = ['covid19', 'ncov', 'corona', 'coronavirus', 'covid2019']
 language = ['en']
 colq = connection.db.tweets_sfe
 
-
+#Tweet Stream Reading
 def Prepare_Tweet(tweet_data):
     place = tweet_data['place']
     if place != None:
@@ -41,21 +42,21 @@ def Prepare_Tweet(tweet_data):
                  'Likes': user_likes, 'Timezone': tweet_data['user']['time_zone']}
         return tweet
 
-
+#Tweet Likes Filtering
 def Prepare_df(tweet_cursor):
     df = pd.DataFrame(list(tweet_cursor))
     df_new = df.sort_values(by='Likes', ascending=False)
     df_new = df_new.reset_index(drop=True)
     return df, df_new
 
-
+#Top Tweets
 def print_top5_liked_tweets(df):
     if len(df) > 5:
         for j in range(5):
             print(df.iloc[j, 7], '--', df.iloc[j, 8])
             print('\n')
 
-
+#Saving Tweet Plots
 def saveplot(df):
     df['Created_date'] = pd.to_datetime(df['Created_date'])
     df_final = df.groupby(
@@ -63,7 +64,7 @@ def saveplot(df):
     df_final.plot(x='Created_date', y='count', kind='line', c='r')
     plt.savefig('/home/ec2-user/BuffOverflow/static/tweet_countimg.png')
 
-
+#Saving Hashtag Plots
 def hastagsplot(df):
     df['hashtag'] = df['Tweet_text'].apply(
         lambda x: re.findall(r'\B#\w*[a-zA-Z]+\w*', x))
@@ -76,14 +77,8 @@ def hastagsplot(df):
     df = pd.DataFrame.from_dict(d, orient='index').reset_index()
     df = df.rename(columns={'index': 'Hashtags', 0: 'Count'})
     print(df.head())
-    #plt.bar(df['Hashtags'].head(), df['Count'].head(), color='blue')
-    # plt.xlabel("Hashtags")
-    # plt.xticks(fontsize=10)
-    #plt.ylabel("Hashtag Count in tweets")
-    #plt.title("Top 5 hashtags")
-    # plt.savefig('/home/ec2-user/buff-overflow/hashtagsimage.png')
-
-
+  
+#Tweet Tokenizing and Filtering
 def tweet_tokenizer(tweet_text):
     try:
         tokenizer = TweetTokenizer()
@@ -96,7 +91,7 @@ def tweet_tokenizer(tweet_text):
         filtered_tokens = []
     return(filtered_tokens)
 
-
+#Method to get frequent tweets
 def get_frequent_terms(text_series, stop_words=None, ngram_range=(1, 2)):
     count_vectorizer = CountVectorizer(analyzer="word",
                                        tokenizer=tweet_tokenizer,
