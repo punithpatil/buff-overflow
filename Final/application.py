@@ -15,8 +15,10 @@ from nltk.tokenize import TweetTokenizer
 from nltk.stem.porter import PorterStemmer
 from sklearn.feature_extraction.text import CountVectorizer
 
+#Flask Application Instance
 application = Flask(__name__)
 
+#Tweet Tokenizing and Filtering Method
 def tweet_tokenizer(tweet_text):
     try:
         tokenizer = TweetTokenizer()
@@ -30,6 +32,7 @@ def tweet_tokenizer(tweet_text):
     return(filtered_tokens)
 
 
+#Method to get frequent tweets
 def get_frequent_terms(text_series, stop_words=None, ngram_range=(1, 2)):
     count_vectorizer = CountVectorizer(analyzer="word",
                                        tokenizer=tweet_tokenizer,
@@ -43,19 +46,14 @@ def get_frequent_terms(text_series, stop_words=None, ngram_range=(1, 2)):
                     .sort_values("count", ascending=False))
     return term_freq_df
 
+#Route to Team Page
 @application.route("/user")
 def user():
     return render_template('user.html')
 
+#Route to Home Page
 @application.route("/")
 def hello():
-    # documents = collection.find()
-    # response = []
-    # for document in documents:
-    # document['_id'] = str(document['_id'])
-    # response.append(document)
-    # print(json.dumps(response))
-    # return render_template('sample.html',data=json.dumps(response))
     tweet_cursor = collection.find()
     df1 = pd.DataFrame(list(tweet_cursor))
     df = df1.sort_values(by='Likes', ascending=False)
@@ -66,6 +64,8 @@ def hello():
     q = []
     x1=[]
     y1=[]
+    
+    #Sending Tweet Frequency To Templates
     if len(df) > 5:
         for j in range(5):
             p.append(df.iloc[j, 7])
@@ -76,25 +76,20 @@ def hello():
         for key, value in df_list:
             x.append(key)
             Y.append(value)
-
+            
+    #Sending Hashtag Frequency To Templates
     df1['hashtag'] = df1['Tweet_text'].apply(lambda x: re.findall(r'\B#\w*[a-zA-Z]+\w*', x))
     temp = []
     for i in df1['hashtag'].values:
         for k in i:
             temp.append(k)
-
     d = Counter(temp)
-    #print(d)
     df2 = pd.DataFrame.from_dict(d, orient='index').reset_index()
     df2.columns = ['Hashtags','tweet_c']
-    #print("Values:",df2['Hashtags'].values,"- type", type(df2['Hashtags']))
-    #print(df2['tweet_c'].values)
     x1.extend(df2['Hashtags'].tolist())
     y1.extend(df2['tweet_c'].tolist())
-    #print("X1 values:",x1[:5])
-    #print("Y1 values:",y1[:5])
-
-
+   
+    #Sending Word Cloud Data To Templates
     df_text_word = get_frequent_terms(df1["Tweet_text"], stop_words="english")
     df_text_word.reset_index(level=0, inplace=True)
     data = dict(zip(df_text_word['token'].tolist(), df_text_word['count'].tolist()))
@@ -110,11 +105,9 @@ def hello():
             print(filename)
             os.remove('static/images/' + filename)
     wc.to_file("/home/ec2-user/BuffOverflow/static/images/"+chart_name)
-    print(df_text_word.head(7))
-
-
     return render_template('dashboard.html',labels=x[-10:], values=Y[-10:],legend="Number of tweets",tweets=zip(p,q),x1=x1[:5],y1=y1[:5],chart_name=chart_name)
 
+#Route to Maps Page
 @application.route('/map')
 def map():
     map_bool=True
@@ -123,9 +116,7 @@ def map():
     for document in documents:
         document['_id'] = str(document['_id'])
         response.append(document)
-    #print(json.dumps(response,default=json_util.default))
     return render_template('map.html',data=json.dumps(response,default=json_util.default),map_bool=map_bool)
-
 
 if __name__ == "__main__":
     application.debug = True
