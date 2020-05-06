@@ -17,15 +17,7 @@ def dashboard():
 
 @application.route("/")
 def hello():
-    # documents = collection.find()
-    # response = []
-    # for document in documents:
-    # document['_id'] = str(document['_id'])
-    # response.append(document)
-    # print(json.dumps(response))
-    # return render_template('sample.html',data=json.dumps(response))
     tweet_cursor = collection.find()
-    # tweet_sample_cursor = coll1.find()
     df = pd.DataFrame(list(tweet_cursor))
     df = df.sort_values(by='Likes', ascending=False)
     df = df.reset_index(drop=True)

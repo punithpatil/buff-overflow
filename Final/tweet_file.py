@@ -1,21 +1,17 @@
-import os
-import sys
 import re
 import cred
 from pymongo import MongoClient
 import json
-from tweepy.streaming import StreamListener
+import tweepy.streaming
 from tweepy import OAuthHandler
 from tweepy import Stream
-from datetime import datetime
-from dateutil import parser
+import dateutil
 import pandas as pd
 import matplotlib.pyplot as plt
-from nltk.tokenize import TweetTokenizer
-from nltk.stem.porter import PorterStemmer
-from sklearn.feature_extraction.text import CountVectorizer
-from collections import Counter
-from wordcloud import WordCloud
+import nltk.tokenize
+import sklearn.feature_extraction.text
+import collections
+import wordcloud
 
 #MongoDB Connection
 connection = MongoClient('localhost', 27017)
@@ -24,7 +20,7 @@ language = ['en']
 colq = connection.db.tweets_sfe
 
 #Tweet Stream Reading
-def Prepare_Tweet(tweet_data):
+def prepare_Tweet(tweet_data):
     place = tweet_data['place']
     if place != None:
         coordinates = place['bounding_box']['coordinates']
@@ -34,7 +30,7 @@ def Prepare_Tweet(tweet_data):
         user_likes = tweet_data['user']['favourites_count']
         retweet_info = tweet_data['retweet_count']
         tweet_text = tweet_data['text']
-        created_date = parser.parse(
+        created_date = dateutil.parser.parse(
             tweet_data['created_at'], ignoretz=True)
         tweet = {'Latitude': lat, 'Longitude': longt,
                  'hashtags': tweet_data['entities']['hashtags'], 'username': tweet_data['user']['screen_name'],
@@ -43,7 +39,7 @@ def Prepare_Tweet(tweet_data):
         return tweet
 
 #Tweet Likes Filtering
-def Prepare_df(tweet_cursor):
+def prepare_df(tweet_cursor):
     df = pd.DataFrame(list(tweet_cursor))
     df_new = df.sort_values(by='Likes', ascending=False)
     df_new = df_new.reset_index(drop=True)
@@ -62,17 +58,17 @@ def saveplot(df):
     df_final = df.groupby(
         [pd.Grouper(key='Created_date', freq='H')]).size().reset_index(name='count')
     df_final.plot(x='Created_date', y='count', kind='line', c='r')
-    plt.savefig('/home/ec2-user/BuffOverflow/static/tweet_countimg.png')
+    plt.savefig('static/tweet_countimg.png')
 
 #Saving Hashtag Plots
-def hastagsplot(df):
+def hashtagsplot(df):
     df['hashtag'] = df['Tweet_text'].apply(
         lambda x: re.findall(r'\B#\w*[a-zA-Z]+\w*', x))
     X = []
     for i in df['hashtag'].values:
         for k in i:
             X.append(k)
-    d = Counter(X)
+    d = collections.Counter(X)
     # print(d)
     df = pd.DataFrame.from_dict(d, orient='index').reset_index()
     df = df.rename(columns={'index': 'Hashtags', 0: 'Count'})
@@ -81,7 +77,7 @@ def hastagsplot(df):
 #Tweet Tokenizing and Filtering
 def tweet_tokenizer(tweet_text):
     try:
-        tokenizer = TweetTokenizer()
+        tokenizer = nltk.tokenize.TweetTokenizer()
         all_tokens = tokenizer.tokenize(tweet_text.lower())
         # this line filters out all tokens that are entirely non-alphabetic characters
         filtered_tokens = [t for t in all_tokens if t.islower()]
@@ -93,9 +89,9 @@ def tweet_tokenizer(tweet_text):
 
 #Method to get frequent tweets
 def get_frequent_terms(text_series, stop_words=None, ngram_range=(1, 2)):
-    count_vectorizer = CountVectorizer(analyzer="word",
-                                       tokenizer=tweet_tokenizer,
-                                       stop_words=stop_words, ngram_range=ngram_range)
+    count_vectorizer = sklearn.feature_extraction.text.CountVectorizer(analyzer="word",
+                                                                       tokenizer=tweet_tokenizer,
+                                                                       stop_words=stop_words, ngram_range=ngram_range)
     term_freq_matrix = count_vectorizer.fit_transform(text_series)
     terms = count_vectorizer.get_feature_names()
     term_frequencies = term_freq_matrix.sum(axis=0).tolist()[0]
@@ -106,31 +102,31 @@ def get_frequent_terms(text_series, stop_words=None, ngram_range=(1, 2)):
     return term_freq_df
 
 
-class StdOutListener(StreamListener):
+class StdOutListener(tweepy.streaming.StreamListener):
     def on_data(self, data):
         tweet_data = json.loads(data)
         # print(tweet_data)
         try:
-            tweet = Prepare_Tweet(tweet_data)
+            tweet = prepare_Tweet(tweet_data)
             if tweet is not None:
                 print(tweet)
                 colq.insert_one(tweet)
                 tweet_cursor = colq.find()
-                orig_df, sorted_df = Prepare_df(tweet_cursor)
+                orig_df, sorted_df = prepare_df(tweet_cursor)
                 print_top5_liked_tweets(sorted_df)
                 saveplot(orig_df)
-                hastagsplot(orig_df)
+                hashtagsplot(orig_df)
                 df_text_word = get_frequent_terms(
                     orig_df["Tweet_text"], stop_words="english")
                 df_text_word.reset_index(level=0, inplace=True)
                 data = dict(zip(df_text_word['token'].tolist(), df_text_word['count'].tolist()))
                 print(data)
-                wc = WordCloud(width=800, height=400,
-                               max_words=100).generate_from_frequencies(data)
+                wc = wordcloud.WordCloud(width=800, height=400,
+                                         max_words=100).generate_from_frequencies(data)
                 plt.figure(figsize=(10, 10))
                 plt.imshow(wc, interpolation='bilinear')
                 plt.axis('off')
-                wc.to_file("/home/ec2-user/buff-overflow/HW6/wcimg.png")
+                wc.to_file("wcimg.png")
                 print(df_text_word.head(7))
         except KeyError:
             print('KeyError')
